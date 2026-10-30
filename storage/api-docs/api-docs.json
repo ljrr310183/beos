@@ -1,0 +1,1205 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Catálogo de Productos y Precios Multidivisa",
+        "description": "API REST del catálogo de productos. Cada producto tiene un precio base expresado en su divisa principal y una lista opcional de precios alternativos por divisa.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/api",
+            "description": "Prefijo aplicado por routes/api.php."
+        }
+    ],
+    "paths": {
+        "/products/{id}": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Obtener producto",
+                "description": "Devuelve un producto con su divisa. Un id no numérico no coincide con la ruta (whereNumber) y también responde 404.",
+                "operationId": "c6fded0f046eddee2c4583f9c734d486",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Producto encontrado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Product"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Producto inexistente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "message": "Producto no encontrado.",
+                                    "error": "NOT_FOUND"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Límite de peticiones excedido: el grupo api admite 60 peticiones por minuto y por IP.",
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Segundos hasta que la ventana se reinicie.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 42
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Peticiones permitidas por ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 60
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Peticiones restantes en la ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 0
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "message": "Demasiadas solicitudes. Inténtalo de nuevo en unos segundos.",
+                                    "error": "TOO_MANY_REQUESTS"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Actualizar producto",
+                "description": "Actualiza el producto (PUT, no PATCH: la ruta solo acepta PUT y PATCH responde 405). Si el body incluye prices, el set de precios se reemplaza completo; si se omite, los precios actuales no se tocan.",
+                "operationId": "5cbce19b0d17f2299f10090bdaff993e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateProductPayload"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Producto actualizado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Product"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Producto inexistente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "405": {
+                        "description": "Método no permitido para la ruta (por ejemplo PATCH).",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "message": "El método HTTP no está soportado para esta ruta.",
+                                    "error": "METHOD_NOT_ALLOWED"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validación fallida.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Límite de peticiones excedido: el grupo api admite 60 peticiones por minuto y por IP.",
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Segundos hasta que la ventana se reinicie.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 42
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Peticiones permitidas por ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 60
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Peticiones restantes en la ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 0
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "message": "Demasiadas solicitudes. Inténtalo de nuevo en unos segundos.",
+                                    "error": "TOO_MANY_REQUESTS"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Eliminar producto",
+                "description": "Elimina el producto y, por la clave foránea cascadeOnDelete, sus precios. Responde 200 con un mensaje, no 204.",
+                "operationId": "0ecaf07240c864bbdd925745a4fb30d9",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Producto eliminado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "example": "Producto eliminado correctamente."
+                                        }
+                                    },
+                                    "type": "object"
+                                },
+                                "example": {
+                                    "message": "Producto eliminado correctamente."
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Producto inexistente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Límite de peticiones excedido: el grupo api admite 60 peticiones por minuto y por IP.",
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Segundos hasta que la ventana se reinicie.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 42
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Peticiones permitidas por ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 60
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Peticiones restantes en la ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 0
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "message": "Demasiadas solicitudes. Inténtalo de nuevo en unos segundos.",
+                                    "error": "TOO_MANY_REQUESTS"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/products/{id}/prices": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Listar precios del producto",
+                "description": "Devuelve el producto con el atributo price_list: el precio base (id 0, is_base_price true) y las filas de product_prices (is_base_price false, con currency).",
+                "operationId": "d27d563db0587d4b9ccc709b0c4b0d69",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Producto con su lista de precios.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ProductWithPrices"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Producto inexistente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Límite de peticiones excedido: el grupo api admite 60 peticiones por minuto y por IP.",
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Segundos hasta que la ventana se reinicie.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 42
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Peticiones permitidas por ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 60
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Peticiones restantes en la ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 0
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "message": "Demasiadas solicitudes. Inténtalo de nuevo en unos segundos.",
+                                    "error": "TOO_MANY_REQUESTS"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Registrar precios del producto",
+                "description": "Registra precios alternativos para el producto. El body es un arreglo JSON de precios sin clave envolvente, con un máximo de 50 elementos; un duplicado de divisa en el lote o contra product_prices responde 422.",
+                "operationId": "c5536e181a8367f524c3911c2c39f390",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        },
+                        "example": 1
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "description": "Arreglo JSON de precios, sin clave envolvente. Máximo 50 elementos.",
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/StorePriceItem"
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Precios registrados.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ProductPrice"
+                                            }
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Producto inexistente.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validación fallida: payload no es lista, está vacío, incluye atributos fuera de ProductPrice::$fillable o repite una divisa.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                },
+                                "example": {
+                                    "message": "Los datos proporcionados no son válidos.",
+                                    "error": "VALIDATION_ERROR",
+                                    "errors": {
+                                        "payload": [
+                                            "El payload debe ser un arreglo de precios."
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Límite de peticiones excedido: el grupo api admite 60 peticiones por minuto y por IP.",
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Segundos hasta que la ventana se reinicie.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 42
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Peticiones permitidas por ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 60
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Peticiones restantes en la ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 0
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "message": "Demasiadas solicitudes. Inténtalo de nuevo en unos segundos.",
+                                    "error": "TOO_MANY_REQUESTS"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/products": {
+            "get": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Listar productos",
+                "description": "Lista paginada de productos con su divisa. La ruta se declara como /api/products porque el prefijo api lo aplica withRouting(api: ...).",
+                "operationId": "6603111cee65aa47a5ad2fa772a0b9ca",
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Página solicitada. Un valor menor que 1 se normaliza a 1.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 1,
+                            "minimum": 1
+                        },
+                        "example": 1
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Tamaño de página. Fuera del rango 1..100 se usa 15.",
+                        "required": false,
+                        "schema": {
+                            "type": "integer",
+                            "default": 15,
+                            "maximum": 100,
+                            "minimum": 1
+                        },
+                        "example": 15
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Colección paginada.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProductList"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno. Solo se devuelve el mensaje genérico cuando APP_DEBUG=false.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Límite de peticiones excedido: el grupo api admite 60 peticiones por minuto y por IP.",
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Segundos hasta que la ventana se reinicie.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 42
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Peticiones permitidas por ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 60
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Peticiones restantes en la ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 0
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "message": "Demasiadas solicitudes. Inténtalo de nuevo en unos segundos.",
+                                    "error": "TOO_MANY_REQUESTS"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "Products"
+                ],
+                "summary": "Crear producto",
+                "description": "Crea el producto y, si viene la clave prices, sus precios alternativos en la misma transacción.",
+                "operationId": "e1cc1a58065716e2537bd10d7bc7781e",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreProductPayload"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Producto creado.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/Product"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validación fallida.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationError"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error interno.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                }
+                            }
+                        }
+                    },
+                    "429": {
+                        "description": "Límite de peticiones excedido: el grupo api admite 60 peticiones por minuto y por IP.",
+                        "headers": {
+                            "Retry-After": {
+                                "description": "Segundos hasta que la ventana se reinicie.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 42
+                                }
+                            },
+                            "X-RateLimit-Limit": {
+                                "description": "Peticiones permitidas por ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 60
+                                }
+                            },
+                            "X-RateLimit-Remaining": {
+                                "description": "Peticiones restantes en la ventana.",
+                                "schema": {
+                                    "type": "integer",
+                                    "example": 0
+                                }
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Error"
+                                },
+                                "example": {
+                                    "message": "Demasiadas solicitudes. Inténtalo de nuevo en unos segundos.",
+                                    "error": "TOO_MANY_REQUESTS"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Currency": {
+                "description": "Divisa según App\\Http\\Resources\\CurrencyResource.",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "US Dollar",
+                        "maxLength": 100
+                    },
+                    "symbol": {
+                        "type": "string",
+                        "example": "$",
+                        "maxLength": 10
+                    },
+                    "exchange_rate": {
+                        "description": "Cast decimal:4 del modelo Currency, por eso viaja como string.",
+                        "type": "string",
+                        "example": "1.0000"
+                    }
+                },
+                "type": "object"
+            },
+            "Error": {
+                "description": "Envelope de error definido en bootstrap/app.php.",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Producto no encontrado."
+                    },
+                    "error": {
+                        "description": "Código interno del error.",
+                        "type": "string",
+                        "example": "NOT_FOUND",
+                        "enum": [
+                            "NOT_FOUND",
+                            "METHOD_NOT_ALLOWED",
+                            "TOO_MANY_REQUESTS",
+                            "SERVER_ERROR"
+                        ]
+                    }
+                },
+                "type": "object"
+            },
+            "PriceListEntry": {
+                "description": "Elemento de price_list construido en ProductRepository::getByPricesPerProduct. La fila base usa id 0 y no incluye currency.",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 0
+                    },
+                    "product_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "currency_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "price": {
+                        "description": "En price_list el precio se castea a float, a diferencia del recurso Product.",
+                        "type": "number",
+                        "format": "float",
+                        "example": 99.99
+                    },
+                    "currency": {
+                        "description": "Solo presente en las filas que no son precio base.",
+                        "properties": {
+                            "name": {
+                                "type": "string",
+                                "example": "Euro"
+                            },
+                            "symbol": {
+                                "type": "string",
+                                "example": "€"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "is_base_price": {
+                        "type": "boolean",
+                        "example": false
+                    }
+                },
+                "type": "object"
+            },
+            "ProductList": {
+                "description": "AnonymousResourceCollection de ProductResource: envelope del paginador de Laravel con page y per_page.",
+                "properties": {
+                    "data": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/Product"
+                        }
+                    },
+                    "links": {
+                        "properties": {
+                            "first": {
+                                "type": "string",
+                                "example": "http://localhost:8000/api/products?page=1",
+                                "nullable": true
+                            },
+                            "last": {
+                                "type": "string",
+                                "example": "http://localhost:8000/api/products?page=2",
+                                "nullable": true
+                            },
+                            "prev": {
+                                "type": "string",
+                                "example": null,
+                                "nullable": true
+                            },
+                            "next": {
+                                "type": "string",
+                                "example": "http://localhost:8000/api/products?page=2",
+                                "nullable": true
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "meta": {
+                        "properties": {
+                            "current_page": {
+                                "type": "integer",
+                                "example": 1
+                            },
+                            "from": {
+                                "type": "integer",
+                                "example": 1,
+                                "nullable": true
+                            },
+                            "last_page": {
+                                "type": "integer",
+                                "example": 2
+                            },
+                            "links": {
+                                "type": "array",
+                                "items": {
+                                    "properties": {
+                                        "url": {
+                                            "type": "string",
+                                            "nullable": true
+                                        },
+                                        "label": {
+                                            "type": "string",
+                                            "example": "1"
+                                        },
+                                        "page": {
+                                            "type": "integer",
+                                            "example": 1,
+                                            "nullable": true
+                                        },
+                                        "active": {
+                                            "type": "boolean",
+                                            "example": true
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "path": {
+                                "type": "string",
+                                "example": "http://localhost:8000/api/products"
+                            },
+                            "per_page": {
+                                "type": "integer",
+                                "example": 15
+                            },
+                            "to": {
+                                "type": "integer",
+                                "example": 1,
+                                "nullable": true
+                            },
+                            "total": {
+                                "type": "integer",
+                                "example": 25
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "type": "object"
+            },
+            "ProductPrice": {
+                "description": "Registro de product_prices según App\\Http\\Resources\\ProductPriceResource.",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 10
+                    },
+                    "product_id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "price": {
+                        "description": "Cast decimal:4 del modelo ProductPrice, por eso viaja como string.",
+                        "type": "string",
+                        "example": "280.5000"
+                    },
+                    "currency": {
+                        "$ref": "#/components/schemas/Currency"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "Product": {
+                "description": "Producto según App\\Http\\Resources\\ProductResource (sin el bloque price_list).",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Wireless Keyboard",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Teclado inalámbrico con retroiluminación.",
+                        "nullable": true
+                    },
+                    "price": {
+                        "description": "Cast decimal:4 del modelo Product, por eso viaja como string.",
+                        "type": "string",
+                        "example": "99.9900"
+                    },
+                    "tax_cost": {
+                        "type": "string",
+                        "example": "12.5000"
+                    },
+                    "manufacturing_cost": {
+                        "type": "string",
+                        "example": "45.0000"
+                    },
+                    "currency": {
+                        "$ref": "#/components/schemas/Currency"
+                    },
+                    "created_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "updated_at": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "ProductWithPrices": {
+                "description": "ProductResource cuando el modelo trae el atributo price_list: se omiten currency, created_at y updated_at.",
+                "properties": {
+                    "id": {
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "Wireless Keyboard"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Teclado inalámbrico con retroiluminación.",
+                        "nullable": true
+                    },
+                    "price": {
+                        "type": "string",
+                        "example": "99.9900"
+                    },
+                    "tax_cost": {
+                        "type": "string",
+                        "example": "12.5000"
+                    },
+                    "manufacturing_cost": {
+                        "type": "string",
+                        "example": "45.0000"
+                    },
+                    "price_list": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/PriceListEntry"
+                        }
+                    }
+                },
+                "type": "object"
+            },
+            "StorePriceItem": {
+                "description": "Elemento del payload de POST /products/{id}/prices. product_id debe coincidir con el id de la ruta y no se admiten atributos fuera de ProductPrice::$fillable.",
+                "required": [
+                    "product_id",
+                    "currency_id",
+                    "price"
+                ],
+                "properties": {
+                    "product_id": {
+                        "description": "Rule::in([id de la ruta])",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "currency_id": {
+                        "description": "exists:currencies,id, distinct en el lote y único por producto en product_prices.",
+                        "type": "integer",
+                        "example": 2
+                    },
+                    "price": {
+                        "description": "numeric|min:0|max:99999999.9999|decimal:0,4",
+                        "type": "number",
+                        "format": "float",
+                        "example": 280.5
+                    }
+                },
+                "type": "object"
+            },
+            "StoreProductPayload": {
+                "description": "Body de POST /products, según StoreProductRequest.",
+                "required": [
+                    "name",
+                    "description",
+                    "price",
+                    "currency_id",
+                    "tax_cost",
+                    "manufacturing_cost"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Wireless Keyboard",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Teclado inalámbrico con retroiluminación."
+                    },
+                    "price": {
+                        "description": "numeric|min:0|max:99999999.9999|decimal:0,4",
+                        "type": "number",
+                        "format": "float",
+                        "example": 99.99
+                    },
+                    "currency_id": {
+                        "description": "exists:currencies,id",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "tax_cost": {
+                        "description": "numeric|min:0|max:99999999.9999|decimal:0,4",
+                        "type": "number",
+                        "format": "float",
+                        "example": 12.5
+                    },
+                    "manufacturing_cost": {
+                        "description": "numeric|min:0|max:99999999.9999|decimal:0,4",
+                        "type": "number",
+                        "format": "float",
+                        "example": 45
+                    },
+                    "prices": {
+                        "description": "Opcional, máximo 50 elementos; currency_id debe ser distinct dentro del lote.",
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "currency_id",
+                                "price"
+                            ],
+                            "properties": {
+                                "currency_id": {
+                                    "type": "integer",
+                                    "example": 2
+                                },
+                                "price": {
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 89.5
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "maxItems": 50
+                    }
+                },
+                "type": "object"
+            },
+            "UpdateProductPayload": {
+                "description": "Body de PUT /products/{id}, según UpdateProductRequest. A diferencia de POST, description es present|nullable.",
+                "required": [
+                    "name",
+                    "description",
+                    "price",
+                    "currency_id",
+                    "tax_cost",
+                    "manufacturing_cost"
+                ],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "example": "Wireless Keyboard Pro",
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Teclado inalámbrico con retroiluminación.",
+                        "nullable": true
+                    },
+                    "price": {
+                        "description": "numeric|min:0|max:99999999.9999|decimal:0,4",
+                        "type": "number",
+                        "format": "float",
+                        "example": 109.99
+                    },
+                    "currency_id": {
+                        "description": "exists:currencies,id",
+                        "type": "integer",
+                        "example": 1
+                    },
+                    "tax_cost": {
+                        "description": "numeric|min:0|max:99999999.9999|decimal:0,4",
+                        "type": "number",
+                        "format": "float",
+                        "example": 13.75
+                    },
+                    "manufacturing_cost": {
+                        "description": "numeric|min:0|max:99999999.9999|decimal:0,4",
+                        "type": "number",
+                        "format": "float",
+                        "example": 47.5
+                    },
+                    "prices": {
+                        "description": "Si se envía, reemplaza el set completo de precios. Si se omite, los precios actuales quedan intactos.",
+                        "type": "array",
+                        "items": {
+                            "required": [
+                                "currency_id",
+                                "price"
+                            ],
+                            "properties": {
+                                "currency_id": {
+                                    "type": "integer",
+                                    "example": 2
+                                },
+                                "price": {
+                                    "type": "number",
+                                    "format": "float",
+                                    "example": 98.4
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "maxItems": 50
+                    }
+                },
+                "type": "object"
+            },
+            "ValidationError": {
+                "description": "Error 422: mensaje genérico más el detalle por campo que arma Laravel.",
+                "properties": {
+                    "message": {
+                        "type": "string",
+                        "example": "Los datos proporcionados no son válidos."
+                    },
+                    "error": {
+                        "type": "string",
+                        "example": "VALIDATION_ERROR"
+                    },
+                    "errors": {
+                        "type": "object",
+                        "example": {
+                            "name": [
+                                "El nombre del producto ya está registrado."
+                            ]
+                        },
+                        "additionalProperties": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Products",
+            "description": "Productos y sus precios por divisa."
+        }
+    ]
+}

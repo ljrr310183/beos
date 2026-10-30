@@ -1,0 +1,360 @@
+{
+  "info": {
+    "name": "Begento - Catálogo de Productos",
+    "description": "Peticiones de los 7 endpoints declarados en routes/api.php. El prefijo /api lo aplica bootstrap/app.php, por eso baseUrl ya lo incluye. Antes de usar la colección hay que crear el esquema y los datos: php artisan migrate --seed.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Productos",
+      "item": [
+        {
+          "name": "Listar productos (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products?page=1&per_page=15",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Un valor menor que 1 se normaliza a 1."
+                },
+                {
+                  "key": "per_page",
+                  "value": "15",
+                  "description": "Fuera del rango 1..100 se usa 15."
+                }
+              ]
+            },
+            "description": "GET /api/products. Devuelve data[], links y meta{current_page, from, last_page, links, path, per_page, to, total}."
+          },
+          "response": []
+        },
+        {
+          "name": "Ver producto (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "GET /api/products/{id}. Devuelve data{id, name, description, price, tax_cost, manufacturing_cost, currency, created_at, updated_at}. price, tax_cost y manufacturing_cost son string por el cast decimal:4."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear producto (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Wireless Keyboard {{$timestamp}}\",\n    \"description\": \"Teclado inalámbrico con retroiluminación.\",\n    \"price\": 99.99,\n    \"currency_id\": 1,\n    \"tax_cost\": 12.5,\n    \"manufacturing_cost\": 45,\n    \"prices\": [\n        {\n            \"currency_id\": 2,\n            \"price\": 89.5\n        },\n        {\n            \"currency_id\": 3,\n            \"price\": 88000.1234\n        }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "POST /api/products, validado por StoreProductRequest. prices es opcional (máx. 50) y su currency_id debe ser distinct dentro del lote. El nombre usa {{$timestamp}} para evitar el 422 de unique:products,name."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar producto (200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"Wireless Keyboard Pro {{$timestamp}}\",\n    \"description\": \"Teclado inalámbrico con retroiluminación y teclas multimedia.\",\n    \"price\": 109.99,\n    \"currency_id\": 1,\n    \"tax_cost\": 13.75,\n    \"manufacturing_cost\": 47.5,\n    \"prices\": [\n        {\n            \"currency_id\": 4,\n            \"price\": 161000.25\n        }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "PUT /api/products/{id}, validado por UpdateProductRequest. La ruta solo acepta PUT: un PATCH responde 405 METHOD_NOT_ALLOWED. description es present|nullable. Si prices viene en el body reemplaza el set completo de precios; si se omite, los precios actuales quedan intactos."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar producto (200)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "DELETE /api/products/{id}. Responde 200 con {\"message\":\"Producto eliminado correctamente.\"}, no 204. Los precios se eliminan por el cascadeOnDelete de product_prices."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Precios",
+      "item": [
+        {
+          "name": "Listar precios del producto (200)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}/prices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}",
+                "prices"
+              ]
+            },
+            "description": "GET /api/products/{id}/prices. Devuelve el producto con price_list: la fila base lleva id 0 e is_base_price true; las demás llevan is_base_price false y currency{name, symbol}. En price_list el precio es number (float), no string."
+          },
+          "response": []
+        },
+        {
+          "name": "Registrar precios (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "[\n    {\n        \"product_id\": {{productId}},\n        \"currency_id\": 5,\n        \"price\": 280.5\n    }\n]"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}/prices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}",
+                "prices"
+              ]
+            },
+            "description": "POST /api/products/{id}/prices, validado por StorePriceRequest. El body es una lista desnuda: no se envuelve en {\"prices\": [...]}. product_id es obligatorio y debe coincidir con el id de la ruta. Solo se admiten las claves de ProductPrice::$fillable (product_id, currency_id, price). Responde 201 con data[] de ProductPriceResource."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Errores documentados",
+      "item": [
+        {
+          "name": "404 producto inexistente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/products/999999",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "999999"
+              ]
+            },
+            "description": "404 con {\"message\":\"Producto no encontrado.\",\"error\":\"NOT_FOUND\"}. Un id no numérico tampoco coincide con la ruta (whereNumber) y responde igual."
+          },
+          "response": []
+        },
+        {
+          "name": "405 metodo no permitido (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"No soportado\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}"
+              ]
+            },
+            "description": "405 con {\"message\":\"El método HTTP no está soportado para esta ruta.\",\"error\":\"METHOD_NOT_ALLOWED\"}. La ruta de actualización es PUT."
+          },
+          "response": []
+        },
+        {
+          "name": "422 validacion de producto",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"name\": \"\",\n    \"price\": -1,\n    \"currency_id\": 999999,\n    \"tax_cost\": 0,\n    \"manufacturing_cost\": 0\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products"
+              ]
+            },
+            "description": "422 con message, error VALIDATION_ERROR y errors por campo. Falta description, name está vacío, price es negativo y currency_id no existe en currencies."
+          },
+          "response": []
+        },
+        {
+          "name": "422 payload de precios no es lista",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"prices\": [\n        {\n            \"product_id\": {{productId}},\n            \"currency_id\": 2,\n            \"price\": 100\n        }\n    ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/products/{{productId}}/prices",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "products",
+                "{{productId}}",
+                "prices"
+              ]
+            },
+            "description": "422 con errors.payload = \"El payload debe ser un arreglo de precios.\" porque el body no es una lista. Una lista vacía devuelve \"El listado de precios debe contener al menos un elemento.\" y una clave extra devuelve \"El payload contiene atributos no soportados: ...\" bajo la clave \"{index}.payload\"."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api",
+      "description": "php artisan serve expone la app en el puerto 8000; /api es el prefijo de routes/api.php."
+    },
+    {
+      "key": "productId",
+      "value": "1",
+      "description": "Id de un producto existente en tu base de datos."
+    }
+  ]
+}
