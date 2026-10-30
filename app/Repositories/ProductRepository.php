@@ -19,12 +19,15 @@ class ProductRepository
     {
         $page = max(1, (int) $request->query('page', 1));
         $pageSize = (int) $request->query('per_page', self::DEFAULT_PAGE_SIZE);
+        $sort = $request->query('sort', 'created_at');
+        $direction = $request->query('direction', 'desc');
 
         if ($pageSize < 1 || $pageSize > self::MAX_PAGE_SIZE) {
             $pageSize = self::DEFAULT_PAGE_SIZE;
         }
 
         return Product::with('currency')
+            ->orderBy($sort, $direction)
             ->paginate($pageSize, ['*'], 'page', $page);
     }
 

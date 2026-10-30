@@ -237,6 +237,8 @@ Para usarla: Postman → *Import* → *File* → selecciona ese JSON. Variables:
 
 La colección incluye las 7 peticiones y cuatro casos de error ya documentados (404, 405 por `PATCH`, 422 de producto y 422 de payload no-lista). El `POST /api/products` usa `{{$timestamp}}` en el nombre para no chocar con la regla `unique`.
 
+La misma suite está replicada para la extensión **REST Client** de VS Code en [`postman/begento-productos.http`](postman/begento-productos.http): 11 bloques con las mismas peticiones, cabeceras y cuerpos. Se abre el archivo y se pulsa *Send Request* sobre cada bloque `###`, sin importar nada.
+
 ## Decisiones de seguridad
 
 | Control | Dónde | Comportamiento |

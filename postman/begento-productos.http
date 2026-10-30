@@ -1,0 +1,210 @@
+# Begento — Catálogo de Productos
+#
+# Equivalente en formato .http de postman/begento-productos.postman_collection.json.
+# Pensado para la extensión REST Client de VS Code (humao.rest-client): pulsa
+# "Send Request" encima de cada bloque `###` o ejecuta el archivo completo.
+#
+# Preparación:
+#   php artisan migrate --seed     # crea esquema y datos (monedas 1..5, productos)
+#   php artisan serve              # expone la app en http://localhost:8000
+#
+# Orden sugerido: Productos → Precios → Errores documentados.
+# El POST de creación usa {{$timestamp}} en el nombre (variable de sistema de
+# REST Client) para no chocar con la regla unique:products,name.
+
+@baseUrl = http://localhost:8000/api
+@productId = 1
+
+@accept = application/json
+@contentType = application/json
+
+# Monedas sembradas: 1 = USD, 2 = EUR, 3 = VES, 4 = ARS, 5 = CHF.
+
+
+###############################################################################
+# Productos
+###############################################################################
+
+### Listar productos (200)
+# GET /api/products
+# Devuelve data[], links y meta{current_page, from, last_page, links, path,
+# per_page, to, total}. page < 1 se normaliza a 1; per_page fuera de 1..100 usa 15.
+# @name listarProductos
+GET {{baseUrl}}/products?page=1&per_page=15&sort=name&direction=asc
+Accept: {{accept}}
+
+
+### Ver producto (200)
+# GET /api/products/{id}
+# Devuelve data{id, name, description, price, tax_cost, manufacturing_cost,
+# currency, created_at, updated_at}. price, tax_cost y manufacturing_cost son
+# string por el cast decimal:4.
+# @name verProducto
+GET {{baseUrl}}/products/{{productId}}
+Accept: {{accept}}
+
+
+### Crear producto (201)
+# POST /api/products — validado por StoreProductRequest.
+# prices es opcional (máx. 50) y su currency_id debe ser distinct dentro del lote.
+# @name crearProducto
+POST {{baseUrl}}/products
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+    "name": "Wireless Keyboard {{$timestamp}}",
+    "description": "Teclado inalámbrico con retroiluminación.",
+    "price": 99.99,
+    "currency_id": 1,
+    "tax_cost": 12.5,
+    "manufacturing_cost": 45,
+    "prices": [
+        {
+            "currency_id": 2,
+            "price": 89.5
+        },
+        {
+            "currency_id": 3,
+            "price": 88000.1234
+        }
+    ]
+}
+
+
+### Actualizar producto (200)
+# PUT /api/products/{id} — validado por UpdateProductRequest.
+# La ruta solo acepta PUT: un PATCH responde 405 METHOD_NOT_ALLOWED.
+# description es present|nullable. Si prices viene en el body reemplaza el set
+# completo de precios; si se omite, los precios actuales quedan intactos.
+# @name actualizarProducto
+PUT {{baseUrl}}/products/{{productId}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+    "name": "Wireless Keyboard Pro {{$timestamp}}",
+    "description": "Teclado inalámbrico con retroiluminación y teclas multimedia.",
+    "price": 109.99,
+    "currency_id": 1,
+    "tax_cost": 13.75,
+    "manufacturing_cost": 47.5,
+    "prices": [
+        {
+            "currency_id": 4,
+            "price": 161000.25
+        }
+    ]
+}
+
+
+### Eliminar producto (200)
+# DELETE /api/products/{id}
+# Responde 200 con {"message":"Producto eliminado correctamente."}, no 204.
+# Los precios se eliminan por el cascadeOnDelete de product_prices.
+# @name eliminarProducto
+DELETE {{baseUrl}}/products/{{productId}}
+Accept: {{accept}}
+
+
+###############################################################################
+# Precios
+###############################################################################
+
+### Listar precios del producto (200)
+# GET /api/products/{id}/prices
+# Devuelve el producto con price_list: la fila base lleva id 0 e is_base_price
+# true; las demás llevan is_base_price false y currency{name, symbol}.
+# En price_list el precio es number (float), no string.
+# @name listarPrecios
+GET {{baseUrl}}/products/{{productId}}/prices
+Accept: {{accept}}
+
+
+### Registrar precios (201)
+# POST /api/products/{id}/prices — validado por StorePriceRequest.
+# El body es una lista de precios: no se envuelve en {"prices": [...]}.
+# product_id es obligatorio y debe coincidir con el id de la ruta. Solo se admiten
+# las claves de ProductPrice::$fillable (product_id, currency_id, price).
+# Responde 201 con data[] de ProductPriceResource.
+#
+# Ojo con los datos sembrados: los productos del seeder ya tienen las 5 divisas,
+# así que contra ellos este POST devuelve 422 "El precio para esta divisa ya ha
+# sido registrado para este producto." Para verlo en 201, ejecuta antes "Crear
+# producto" (deja libres las divisas 4 y 5) y apunta @productId a ese id nuevo.
+# @name registrarPrecios
+POST {{baseUrl}}/products/{{productId}}/prices
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+[
+    {
+        "product_id": {{productId}},
+        "currency_id": 5,
+        "price": 280.5
+    }
+]
+
+
+###############################################################################
+# Errores documentados
+###############################################################################
+
+### 404 producto inexistente
+# {"message":"Producto no encontrado.","error":"NOT_FOUND"}.
+# Un id no numérico tampoco coincide con la ruta (whereNumber) y responde igual.
+# @name error404
+GET {{baseUrl}}/products/999999
+Accept: {{accept}}
+
+
+### 405 método no permitido (PATCH)
+# {"message":"El método HTTP no está soportado para esta ruta.",
+#  "error":"METHOD_NOT_ALLOWED"}. La ruta de actualización es PUT.
+# @name error405
+PATCH {{baseUrl}}/products/{{productId}}
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+    "name": "No soportado"
+}
+
+
+### 422 validación de producto
+# 422 con message, error VALIDATION_ERROR y errors por campo.
+# Falta description, name está vacío, price es negativo y currency_id no existe.
+# @name error422Producto
+POST {{baseUrl}}/products
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+    "name": "",
+    "price": -1,
+    "currency_id": 999999,
+    "tax_cost": 0,
+    "manufacturing_cost": 0
+}
+
+
+### 422 payload de precios no es lista
+# 422 con errors.payload = "El payload debe ser un arreglo de precios."
+# porque el body no es una lista.
+# Una lista vacía devuelve "El listado de precios debe contener al menos un elemento."
+# Una clave extra devuelve "El payload contiene atributos no soportados: ..."
+# bajo la clave "{index}.payload".
+# @name error422Precios
+POST {{baseUrl}}/products/{{productId}}/prices
+Content-Type: {{contentType}}
+Accept: {{accept}}
+
+{
+    "prices": [
+        {
+            "product_id": {{productId}},
+            "currency_id": 2,
+            "price": 100
+        }
+    ]
+}
